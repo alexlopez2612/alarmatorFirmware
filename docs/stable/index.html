@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Alarmator Configuración</title>
+<style>
+  /* Reset altura para html y body */
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  /* Contenedor flex vertical */
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background-color: #FFFFFF;
+    color: #777;
+  }
+
+  #header {
+    background-color: #A80000;
+    text-align: center;
+    vertical-align: middle;
+    color: white;
+    padding: 12px 0; /* más alto para header */
+    font-family: "Century Gothic", Verdana, sans-serif;
+    flex-shrink: 0;
+  }
+
+  #footer {
+    background-color: #A80000;
+    text-align: center;
+    vertical-align: middle;
+    color: white;
+    padding: 4px 0; /* más compacto para footer */
+    font-family: "Century Gothic", Verdana, sans-serif;
+    flex-shrink: 0;
+  }
+  
+  h1 {
+    font-family: "Century Gothic", Verdana, sans-serif;
+    color: white;    /* H1 en blanco */
+    margin: 10px 0 20px;
+  }
+
+  h2 {
+    font-family: "Century Gothic", Verdana, sans-serif;
+    color: #1293EE;  /* H2 en azul */
+    margin: 30px 0 20px;
+  }
+
+  /* Login y main container con flex-grow para ocupar espacio */
+  #loginScreen, #mainApp {
+    flex: 1 0 auto;
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 20px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    background: #F9F9F9;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #loginScreen {
+    display: block;
+  }
+  #mainApp {
+    display: none;
+  }
+  label {
+    font-family: "Trebuchet MS", Verdana, sans-serif;
+    font-weight: bold;
+    color: #777;
+    display: block;
+    margin-bottom: 6px;
+  }
+  input[type="password"], input[type="text"], input[type="number"], input[type="email"] {
+    width: 100%;
+    padding: 7px 6px;
+    margin: 6px 0 16px;
+    box-sizing: border-box;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    font-family: Verdana, sans-serif;
+    color: #777;
+    font-size: 1em;
+  }
+  button {
+    border: none;
+    height: 33px;
+    color: white;
+    background-color: #7D0F0F;
+    font-family: "Century Gothic", Verdana, sans-serif;
+    font-size: 1em;
+    padding: 0 18px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  button:hover {
+    background-color: #A80000;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;               /* espacio entre pestañas */
+    margin-bottom: 0;
+    border-bottom: 3px solid #1293EE; /* aquí la línea azul */
+  }
+
+  .tab {
+    box-sizing: border-box;
+    padding: 12px 16px;
+    text-align: center;
+    cursor: pointer;
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    font-family: "Century Gothic", Verdana, sans-serif;
+    user-select: none;
+    color: #444;
+    transition: background 0.2s;
+  }
+
+  .tab:hover {
+    background: #e0e0e0;
+  }
+
+  /* 4 primeras en fila 1, calculando (100% − 12px) ÷ 4 */
+  .tab:nth-child(-n+4) {
+    order: 1;
+    flex: 1 1 calc((100% - 12px) / 4);
+  }
+
+  /* 3 últimas en fila 2, calculando (100% − 8px) ÷ 3 */
+  .tab:nth-child(n+5) {
+    order: 2;
+    flex: 1 1 calc((100% - 8px) / 3);
+  }
+
+  .tab.active {
+    background: #A80000;
+    color: white;
+    font-weight: bold;
+    border-color: #900;
+  }
+
+  .tabContent {
+    display: none;
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 20px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+  }
+
+  .tabContent.active {
+    display: block;
+  }
+
+
+
+  /* Tables for whitelist */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-family: "Century Gothic", Verdana, sans-serif;
+  }
+  th, td {
+    padding: 7px 4px;
+    text-align: left;
+  }
+  th {
+    background-color: #3B3B3B;
+    color: white;
+  }
+  td {
+    background-color: #F0EFE2;
+    color: #47433F;
+    border-top: 1px solid white;
+  }
+  /* Form groups */
+  .form-group {
+    margin-bottom: 15px;
+  }
+  /* Scrollable log */
+  #logContent {
+    background: #f9f9f9;
+    height: 200px;
+    overflow-y: scroll;
+    font-family: Verdana, monospace;
+    padding: 10px;
+    border: 1px solid #ccc;
+    white-space: pre-wrap;
+    color: #47433F;
+  }
+  .checkbox-row {
+    display: flex;
+    justify-content: center;
+    gap: 40px; /* espacio entre checkboxes */
+    margin-bottom: 15px;
+  }
+
+  .checkbox-row label {
+    font-weight: normal; /* si quieres menos peso que otros labels */
+    cursor: pointer;
+  }
+
+  label small {
+    font-weight: normal;
+    color: #555;
+    margin-left: 6px;
+  }
+
+  .panic-section label:first-of-type {
+    display: block;      /* para que el margin funcione bien */
+    margin-bottom: 15px; /* espacio debajo del checkbox */
+  }
+
+  /* Estilos para el switch de Programación Horaria */
+  .horario-status {
+    font-weight: bold;
+    margin-bottom: 8px;  /* espacio entre el texto y el botón */
+    color: #444;         /* a juego con tus otros textos destacados */
+  }
+
+  /* Tarjeta para separar secciones */
+  .card {
+    background: #FFFFFF;            /* fondo blanco */
+    border: 1px solid #ccc;         /* borde suave */
+    border-radius: 6px;
+    padding: 16px;                  /* espacio interior */
+    margin-top: 24px;               /* separa del tab activo */
+    margin-bottom: 24px;            /* separa de la tabla */
+    text-align: center;
+  }
+
+  /* Texto de estado en rojo, para que destaque */
+.horario-status {
+  font-weight: bold;
+  margin-bottom: 12px;
+  /* quitamos el color aquí */
+}
+
+/* Cuando esté activado, usamos el mismo azul de tus <h2> */
+.horario-status.active {
+  color: #1293EE;
+}
+
+/* Cuando esté desactivado, dejamos el gris claro por defecto */
+.horario-status.inactive {
+  color: #777;
+}
+
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Alarmator</h1>
+  <p style="color:#FAF700; margin:0;">Security system</p>
+</div>
+
+<div id="loginScreen">
+  <h2>Acceso</h2>
+  <form id="loginForm">
+    <label for="pinInput">Introduce clave</label>
+    <input type="password" id="pinInput" placeholder="***********" required autofocus />
+    <button type="submit">Entrar</button>
+    <p id="loginError" style="color:#A80000;display:none;">Clave incorrecta, inténtalo de nuevo.</p>
+  </form>
+</div>
+
+<div id="mainApp">
+
+  <div class="tabs">
+    <div class="tab active" data-tab="general">General</div>
+    <div class="tab" data-tab="notificaciones">Notificaciones</div>
+    <div class="tab" data-tab="red">Red</div>
+    <div class="tab" data-tab="email">E-mail</div>
+    <div class="tab" data-tab="whitelist">Amigos</div>
+    <div class="tab" data-tab="horario">Programación Horaria</div>
+    <div class="tab" data-tab="log">Actividad</div>
+  </div>
+
+  <!-- TAB General -->
+  <div id="general" class="tabContent active">
+    <form id="generalForm">
+      <h2>Alarma</h2>
+      <div class="alarm-section">
+        <div class="checkbox-row">
+          <label><input type="checkbox" id="mov" /> Movimiento</label>
+          <label><input type="checkbox" id="vibra" /> Vibración</label>
+        </div>
+      </div>
+
+      
+      <h2>Botón de Pánico</h2>
+      <div class="panic-section">
+        <label><input type="checkbox" id="bp" /> Botón de pánico activado</label>
+      </div>
+
+      <h2>Supervisión y salud del sistema</h2>
+      <div class="health-section">
+
+        <!-- Subgrupo: Chequeos periódicos -->
+        <div class="form-group">
+          <label for="smsCheckInterval">Intervalo de chequeo SMS (minutos)</label>
+          <input type="number" id="smsCheckInterval" min="1" max="120" />
+        </div>
+
+        <!-- Subgrupo: Mensajes de estado -->
+        <div class="card" id="statusMessagesCard">
+          <div style="font-weight: bold; font-size: 1.08em; margin-bottom: 6px;">
+            Mensajes de estado
+          </div>
+          <label style="display:block; margin-bottom:10px;">
+            <input type="checkbox" id="actMsgEstado" />
+            Activar mensajes de estado
+          </label>
+
+          <div id="statusMsgFields" style="display:none;">
+            <label for="statusSmsHour1">Hora de envío de SMS de estado 1 (0-23 h)</label>
+            <input type="number" id="statusSmsHour1" min="0" max="23" />
+
+            <label for="statusSmsHour2">Hora de envío de SMS de estado 2 (0-23 h)</label>
+            <input type="number" id="statusSmsHour2" min="0" max="23" />
+          </div>
+        </div>
+      </div>
+
+
+      <h2>Comportamiento del sistema</h2>
+      <div class="system-behavior-section">
+        <label><input type="checkbox" id="autoArm" /> Auto armado al arrancar</label>
+        <label><input type="checkbox" id="modoSleep" /> Modo Sleep (ahorro energía en batería)</label>
+        <!-- Sub-opción: Ultra sleep (visible solo si Modo Sleep está activado) -->
+        <div id="rowUltraSleep" class="switch-row" style="margin-left: 24px; display: none;">
+          <label>
+            <input type="checkbox" id="actUltraSleep">
+            <span>Ultra sleep (apagar módem al dormir)</span>
+          </label>
+          <div class="field-hint">Requiere “Modo Sleep” activado.</div>
+        </div>
+      </div>
+
+      <h2>Clave Web</h2>
+      <div class="clave-section">
+        <label for="currentClave">Clave actual</label>
+        <input type="password" id="currentClave" maxlength="4" pattern="\d{4}" inputmode="numeric" />
+        
+        <label for="newClave">
+          Nueva clave
+          <small>(La clave debe tener 4 dígitos numéricos.)</small>
+        </label>
+        <input type="password" id="newClave" maxlength="4" pattern="\d{4}" inputmode="numeric" />
+        
+        <label for="confirmClave">Confirmar nueva clave</label>
+        <input type="password" id="confirmClave" maxlength="4" pattern="\d{4}" inputmode="numeric" />
+      </div>
+      <button type="submit">Guardar</button>
+    </form>
+  </div>
+
+  <!-- TAB NOTIFICACIONES -->
+  <div id="notificaciones" class="tabContent">
+    <form id="notificationsForm">
+      <h2>Opciones de Envío</h2>
+      <div class="send-options">
+        <label><input type="checkbox" id="actSmsAlerts" /> Enviar alertas por SMS</label>
+        <label><input type="checkbox" id="actEmailAlerts" /> Enviar alertas por Email</label>
+      </div>
+
+      <h2>Destinatarios Alarma</h2>
+      <div class="alarm-recipients">
+        <label for="numSmsAlarma1">Número SMS Alarma 1</label>
+        <input type="text" id="numSmsAlarma1" maxlength="20" />
+
+        <label for="numSmsAlarma2">Número SMS Alarma 2</label>
+        <input type="text" id="numSmsAlarma2" maxlength="20" />
+
+        <label for="numSmsAlarma3">Número SMS Alarma 3</label>
+        <input type="text" id="numSmsAlarma3" maxlength="20" />
+
+        <label for="smtpToAl1">Email Alarma 1</label>
+        <input type="email" id="smtpToAl1" maxlength="64" />
+
+        <label for="smtpToAl2">Email Alarma 2</label>
+        <input type="email" id="smtpToAl2" maxlength="64" />
+
+        <label for="smtpToAl3">Email Alarma 3</label>
+        <input type="email" id="smtpToAl3" maxlength="64" />
+      </div>
+
+      <h2>Destinatarios Botón de Pánico</h2>
+      <div class="panic-recipients">
+        <label for="numSmsBp1">Número SMS Botón de Pánico 1</label>
+        <input type="text" id="numSmsBp1" maxlength="20" />
+
+        <label for="numSmsBp2">Número SMS Botón de Pánico 2</label>
+        <input type="text" id="numSmsBp2" maxlength="20" />
+
+        <label for="numSmsBp3">Número SMS Botón de Pánico 3</label>
+        <input type="text" id="numSmsBp3" maxlength="20" />
+
+        <label for="smtpToBp1">Email Botón de Pánico 1</label>
+        <input type="email" id="smtpToBp1" maxlength="64" />
+
+        <label for="smtpToBp2">Email Botón de Pánico 2</label>
+        <input type="email" id="smtpToBp2" maxlength="64" />
+
+        <label for="smtpToBp3">Email Botón de Pánico 3</label>
+        <input type="email" id="smtpToBp3" maxlength="64" />
+      </div>
+
+      <button id="saveNotificacionesBtn">Guardar Notificaciones</button>  
+    </form>
+  </div>
+
+
+  <!-- TAB RED -->
+  <div id="red" class="tabContent">
+    <form id="networkForm">
+      <h2>Configuración de Red</h2>
+      <div class="network-section">
+        <div class="form-group">
+          <label for="apn">APN (Nombre del punto de acceso)</label>
+          <input type="text" id="apn" maxlength="50" />
+        </div>
+        <div class="form-group">
+          <label for="wifiSsid">Wi‑Fi SSID</label>
+          <input type="text" id="wifiSsid" maxlength="50" />
+        </div>
+        <div class="form-group">
+          <label for="wifiPass">Wi‑Fi Password</label>
+          <input type="password" id="wifiPass" maxlength="50" />
+        </div>
+      </div>
+      <button type="submit">Guardar Red</button>
+    </form>
+  </div>
+
+
+  <!-- TAB CORREO ELECTRÓNICO -->
+  <div id="email" class="tabContent">
+    <form id="emailForm" autocomplete="off">
+      <h2>Correo Electrónico</h2>
+
+      <div class="form-group">
+        <label for="smtpServer">Servidor SMTP</label>
+        <input type="text" id="smtpServer" maxlength="64" placeholder="smtp.ejemplo.com" />
+      </div>
+      <div class="form-group">
+        <label for="smtpPort">Puerto SMTP</label>
+        <input type="number" id="smtpPort" min="1" max="65535" placeholder="587" />
+      </div>
+      <div class="form-group">
+        <label for="smtpUser">Usuario SMTP</label>
+        <input type="text" id="smtpUser" maxlength="64" placeholder="usuario@ejemplo.com" />
+      </div>
+      <div class="form-group">
+        <label for="smtpPass">Contraseña SMTP</label>
+        <input type="password" id="smtpPass" maxlength="64" />
+      </div>
+      <div class="form-group">
+        <label for="smtpFrom">Remitente (From)</label>
+        <input type="email" id="smtpFrom" maxlength="64" placeholder="alarma@tu-dominio.com" />
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="smtpUseTLS" />
+          Usar TLS
+        </label>
+      </div>
+
+      <!-- Tarjetita bonita usando tu clase de CSS -->
+      <div class="card">
+        <div style="font-weight: bold; font-size: 1.08em; margin-bottom: 6px;">
+          Comprobar configuración de correo
+        </div>
+        <div style="font-size: 0.97em; color: #444; margin-bottom: 10px;">
+          Puedes enviar un email de prueba con la configuración actual.
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <input type="email" id="testEmailTo" maxlength="64"
+                placeholder="Introduce tu email de prueba" style="width: 80%;" />
+        </div>
+        <button type="button" id="testEmailBtn" style="margin-top: 3px;">
+          Probar Email
+        </button>
+        <div id="testEmailStatus" style="margin-top: 10px; min-height: 22px;"></div>
+      </div>
+
+      <div class="form-group" style="margin-top: 32px;">
+        <button type="submit" id="saveEmailBtn">Guardar configuración</button>
+      </div>
+    </form>
+  </div>
+
+
+
+
+
+  <!-- TAB AMIGOS -->
+  <div id="whitelist" class="tabContent">
+    <button id="addFriendBtn">Añadir Amigo</button>
+    <table id="whitelistTable">
+      <thead>
+        <tr><th>ID</th><th>Número</th><th>VIP</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        <!-- Lista dinámica -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TAB PROGRAMACIÓN HORARIA -->
+  <div id="horario" class="tabContent">
+    <!-- Toggle de Activar/Desactivar Programación Horaria -->
+    <div class="card">
+      <div id="horarioStatus" class="horario-status">
+        <!-- Texto dinámico: “Programación horaria activada” o “Programación horaria desactivada” -->
+      </div>
+      <button id="toggleHorarioBtn">
+        <!-- Texto dinámico: “Activar programación” o “Desactivar programación” -->
+      </button>
+    </div>
+    <table id="scheduleTable">
+      <thead>
+        <tr>
+          <th>Habilitado</th>
+          <th>Armado</th>
+          <th>Desarmado</th>
+          <th>Días</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Aquí se cargarán las filas dinámicamente -->
+      </tbody>
+    </table>
+
+    <button id="addScheduleBtn" style="margin-top:10px;">Añadir Entrada</button>
+
+    <!-- Formulario oculto para agregar/editar -->
+    <form id="scheduleForm" style="display:none; margin-top:15px; border: 1px solid #ccc; padding: 10px; border-radius: 6px; max-width: 600px;">
+      <input type="hidden" id="scheduleId" /> <!-- Para editar, guarda el índice -->
+
+      <label>
+        <input type="checkbox" id="enabled" />
+        Habilitado
+      </label>
+
+      <div style="margin-top:8px;">
+        <label>Hora Armado:</label>
+        <input type="number" id="hourArm" min="0" max="23" required style="width:60px;" />
+        :
+        <input type="number" id="minuteArm" min="0" max="59" required style="width:60px;" />
+      </div>
+
+      <div style="margin-top:8px;">
+        <label>Hora Desarmado:</label>
+        <input type="number" id="hourDisarm" min="0" max="23" required style="width:60px;" />
+        :
+        <input type="number" id="minuteDisarm" min="0" max="59" required style="width:60px;" />
+      </div>
+
+      <div style="margin-top:8px;">
+        <label>Días:</label>
+        <label><input type="checkbox" class="dayCheckbox" value="1" /> Lunes</label>
+        <label><input type="checkbox" class="dayCheckbox" value="2" /> Martes</label>
+        <label><input type="checkbox" class="dayCheckbox" value="4" /> Miércoles</label>
+        <label><input type="checkbox" class="dayCheckbox" value="8" /> Jueves</label>
+        <label><input type="checkbox" class="dayCheckbox" value="16" /> Viernes</label>
+        <label><input type="checkbox" class="dayCheckbox" value="32" /> Sábado</label>
+        <label><input type="checkbox" class="dayCheckbox" value="64" /> Domingo</label>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button type="submit">Guardar</button>
+        <button type="button" id="cancelScheduleBtn" style="margin-left: 10px;">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- TAB ACTIVIDAD -->
+  <div id="log" class="tabContent">
+    <h2>Actividad reciente</h2>
+    <table id="userLogTable">
+      <thead>
+        <tr>
+          <th>Fecha/Hora</th>
+          <th>Tipo</th>
+          <th>Remitente</th>
+          <th>Mensaje</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Las filas del log se rellenarán aquí vía JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="footer">
+  <p>&copy; Alexito Electronics 2025</p>
+</div>
+
+<script>
+    
+  // >>>>>>>>>>> MANEJO DE PESTAÑAS
+  const tabs = document.querySelectorAll('.tab');
+  const contents = document.querySelectorAll('.tabContent');
+
+
+  //console.log('Tabs encontrados:', tabs.length);
+//console.log('Contenidos encontrados:', contents.length);
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+          console.log('Pestaña clicada:', tab.getAttribute('data-tab')); // <-- Añade esto para debug
+
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.getAttribute('data-tab');
+          contents.forEach(c => {
+          c.classList.toggle('active', c.id === target);
+          });
+
+          // Si abrimos la pestaña whitelist, cargamos la lista
+          if (target === 'whitelist') {
+            console.log('Cargando whitelist...'); // <-- Añade esto para debug
+            loadWhitelist();
+          }else if (target === 'general') {
+            console.log('Cargando configuración general...');
+            loadGeneralConfig();
+          }else if (target === 'horario') {
+            console.log('Cargando Programación horaria...');
+            loadScheduleTable();
+          }else if (target === 'notificaciones') {
+            console.log('Cargando Notificaciones...');
+            loadNotificationsConfig();
+          }else if (target === 'red') {
+            console.log('Cargando Red...');
+            loadNetworkConfig();
+          }else if (target === 'email') {
+            console.log('Cargando Red...');
+            loadEmailConfig();
+          }else if (target === 'log') {
+            console.log('Cargando Actividad...');
+            loadUserLog()
+          }
+
+      });
+    });
+
+
+  // >>>>>>>>>>> LISTENER PARA EL LOGIN
+    loginForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const pin = pinInput.value;
+      if (pin.length === 4) {
+        try {
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',  // importante para cookies
+            body: JSON.stringify({pin})
+          });
+          if (!res.ok) throw new Error('Login fallido');
+          loginScreen.style.display = 'none';
+          mainApp.style.display = 'block';
+          // Aquí llama a cargar la config general al mostrar la app
+          loadGeneralConfig();
+          //loadWhitelist(); // carga inicial, por ejemplo
+        } catch (err) {
+          loginError.style.display = 'block';
+        }
+      } else {
+        loginError.style.display = 'block';
+      }
+    });
+
+    // >>>>>>>>>>> INICIO FUNCIONES PARA TAB GENERAL
+    let currentPassword = '';
+    async function loadGeneralConfig() {
+      try {
+        const res = await fetch('/api/config', { method: 'GET', credentials: 'include' });
+        if (!res.ok) throw new Error('Error al cargar configuración');
+        const data = await res.json();
+
+        // Asignar valores a inputs
+        currentPassword = data.password || '';
+        document.getElementById('bp').checked    = data.bp   || false;
+        document.getElementById('vibra').checked = data.vibra|| false;
+        document.getElementById('mov').checked   = data.mov  || false;
+        document.getElementById('autoArm').checked = data.autoArm || false;
+        document.getElementById('modoSleep').checked = data.modoSleep || false;
+        document.getElementById('smsCheckInterval').value = data.smsCheckInterval || '';
+        document.getElementById('statusSmsHour1').value  = data.statusSmsHour1 || '';
+        document.getElementById('statusSmsHour2').value  = data.statusSmsHour2 || '';
+        // NUEVOS
+        document.getElementById('actUltraSleep').checked = data.actUltraSleep ?? true;
+        document.getElementById('actMsgEstado').checked  = data.actMsgEstado ?? true;
+
+        // Aplica visibilidad coherente
+        updateUIFromConfig();
+
+      } catch (e) {
+        console.error('Error cargando configuración general:', e);
+      }
+    }
+
+
+    async function saveGeneralConfig() {
+      const currentClave = document.getElementById('currentClave').value.trim();
+      const newClave = document.getElementById('newClave').value.trim();
+
+      const passwordToSend = newClave !== '' ? newClave : currentPassword;
+
+      const data = {
+        password: passwordToSend,
+        bp: document.getElementById('bp').checked,
+        vibra: document.getElementById('vibra').checked,
+        mov: document.getElementById('mov').checked,
+        autoArm: document.getElementById('autoArm').checked,
+        modoSleep: document.getElementById('modoSleep').checked,
+        smsCheckInterval: parseInt(document.getElementById('smsCheckInterval').value) || 0,
+        statusSmsHour1: parseInt(document.getElementById('statusSmsHour1').value) || 0,
+        statusSmsHour2: parseInt(document.getElementById('statusSmsHour2').value) || 0,
+        actUltraSleep: document.getElementById('actUltraSleep')?.checked ?? true,
+        actMsgEstado:  document.getElementById('actMsgEstado')?.checked ?? true,
+      };
+
+      console.log(JSON.stringify(data));
+      try {
+        const res = await fetch('/api/config', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Error guardando configuración');
+        alert('Configuración guardada correctamente');
+
+        // Limpiar campos de clave
+        document.getElementById('currentClave').value = '';
+        document.getElementById('newClave').value = '';
+        document.getElementById('confirmClave').value = '';
+
+      } catch (e) {
+        alert('Error al guardar configuración: ' + e.message);
+      }
+    }
+
+    document.getElementById('generalForm').addEventListener('submit', async (e) => {
+      const mov = document.getElementById('mov').checked;
+      const vibra = document.getElementById('vibra').checked;
+
+      if (!mov && !vibra) {
+        e.preventDefault();
+        alert('Debes seleccionar al menos Movimiento o Vibración.');
+        return;
+      }
+
+      const currentClave = document.getElementById('currentClave').value.trim();
+      const newClave = document.getElementById('newClave').value.trim();
+      const confirmClave = document.getElementById('confirmClave').value.trim();
+
+      // Si todos los campos clave están vacíos, no validar
+      if (currentClave || newClave || confirmClave) {
+        if (!currentClave) {
+          e.preventDefault();
+          alert('Debes introducir la clave actual para cambiarla.');
+          return;
+        }
+        if (!newClave || !confirmClave) {
+          e.preventDefault();
+          alert('Debes rellenar ambos campos de nueva clave y confirmación.');
+          return;
+        }
+        if (newClave !== confirmClave) {
+          e.preventDefault();
+          alert('La nueva clave y su confirmación no coinciden.');
+          return;
+        }
+      }
+
+      // === NUEVO: refs para validar intervalo y horas (coexiste con lo tuyo) ===
+      const elSmsCheckInt  = document.getElementById('smsCheckInterval');
+      const elActMsgEstado = document.getElementById('actMsgEstado');
+      const elHour1        = document.getElementById('statusSmsHour1');
+      const elHour2        = document.getElementById('statusSmsHour2');
+
+      // Limpia mensajes previos SOLO de estos campos (no tocamos tus otros)
+      [elSmsCheckInt, elHour1, elHour2].forEach(el => el && el.setCustomValidity(''));
+
+      // === NUEVO: validaciones suaves (añádelo junto a tus otras comprobaciones) ===
+      let okExtra = true;
+
+      // Intervalo ≥ 1
+      if (elSmsCheckInt) {
+        const v = parseInt(elSmsCheckInt.value, 10);
+        if (!Number.isFinite(v) || v < 1) {
+          elSmsCheckInt.setCustomValidity('Debe ser un número entero ≥ 1.');
+          okExtra = false;
+        }
+      }
+
+      // Horas solo si “Activar mensajes de estado” está ON
+      if (elActMsgEstado?.checked) {
+        const h1 = parseInt(elHour1?.value, 10);
+        const h2 = parseInt(elHour2?.value, 10);
+        if (!Number.isFinite(h1) || h1 < 0 || h1 > 23) { elHour1.setCustomValidity('Valor entre 0 y 23.'); okExtra = false; }
+        if (!Number.isFinite(h2) || h2 < 0 || h2 > 23) { elHour2.setCustomValidity('Valor entre 0 y 23.'); okExtra = false; }
+      }
+
+      // Si falla LO NUEVO, mostramos su primer error y salimos
+      if (!okExtra) {
+        if (elSmsCheckInt && !elSmsCheckInt.checkValidity()) elSmsCheckInt.reportValidity();
+        else if (elActMsgEstado?.checked && elHour1 && !elHour1.checkValidity()) elHour1.reportValidity();
+        else if (elActMsgEstado?.checked && elHour2 && !elHour2.checkValidity()) elHour2.reportValidity();
+        return;
+      }
+
+      e.preventDefault();
+      await saveGeneralConfig();
+    });
+
+
+    document.getElementById('modoSleep').addEventListener('change', updateUIFromConfig);
+    document.getElementById('actMsgEstado').addEventListener('change', updateUIFromConfig);
+
+    function updateUIFromConfig() {
+      const modoSleep       = document.getElementById('modoSleep').checked;
+      const rowUltraSleep   = document.getElementById('rowUltraSleep');
+      const actMsgEstado    = document.getElementById('actMsgEstado').checked;
+      const statusMsgFields = document.getElementById('statusMsgFields');
+
+      if (rowUltraSleep) {
+        rowUltraSleep.style.display = modoSleep ? '' : 'none';
+      }
+
+      if (statusMsgFields) {
+        statusMsgFields.style.display = actMsgEstado ? '' : 'none';
+      }
+}
+
+
+
+    // >>>>>>>>>>> FIN FUNCIONES PARA TAB GENERAL
+  // >>>>>>>>>>> INICIO FUNCIONES PARA TAB NOTIFICACIONES
+// Función para cargar configuración Notificaciones
+async function loadNotificationsConfig() {
+  try {
+    const res = await fetch('/api/notifications', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Error al cargar configuración');
+
+    const data = await res.json();
+
+    // Rellenar los checkboxes
+    document.getElementById('actSmsAlerts').checked = data.actSmsAlerts || false;
+    document.getElementById('actEmailAlerts').checked = data.actEmailAlerts || false;
+
+    // Rellenar números SMS Alarma
+    document.getElementById('numSmsAlarma1').value = data.numSmsAlarma1 || '';
+    document.getElementById('numSmsAlarma2').value = data.numSmsAlarma2 || '';
+    document.getElementById('numSmsAlarma3').value = data.numSmsAlarma3 || '';
+
+    // Rellenar números SMS Botón de pánico
+    document.getElementById('numSmsBp1').value = data.numSmsBp1 || '';
+    document.getElementById('numSmsBp2').value = data.numSmsBp2 || '';
+    document.getElementById('numSmsBp3').value = data.numSmsBp3 || '';
+
+    // Rellenar emails Alarma
+    document.getElementById('smtpToAl1').value = data.smtpToAl1 || '';
+    document.getElementById('smtpToAl2').value = data.smtpToAl2 || '';
+    document.getElementById('smtpToAl3').value = data.smtpToAl3 || '';
+
+    // Rellenar emails Botón de pánico
+    document.getElementById('smtpToBp1').value = data.smtpToBp1 || '';
+    document.getElementById('smtpToBp2').value = data.smtpToBp2 || '';
+    document.getElementById('smtpToBp3').value = data.smtpToBp3 || '';
+
+  } catch (e) {
+    console.error('Error cargando configuración Notificaciones:', e);
+    alert('Error al cargar configuración de Notificaciones.');
+  }
+}
+
+// Función para guardar configuración Notificaciones
+async function saveNotificationsConfig() {
+  const data = {
+    actSmsAlerts: document.getElementById('actSmsAlerts').checked,
+    actEmailAlerts: document.getElementById('actEmailAlerts').checked,
+    numSmsAlarma1: document.getElementById('numSmsAlarma1').value.trim(),
+    numSmsAlarma2: document.getElementById('numSmsAlarma2').value.trim(),
+    numSmsAlarma3: document.getElementById('numSmsAlarma3').value.trim(),
+    numSmsBp1: document.getElementById('numSmsBp1').value.trim(),
+    numSmsBp2: document.getElementById('numSmsBp2').value.trim(),
+    numSmsBp3: document.getElementById('numSmsBp3').value.trim(),
+    smtpToAl1: document.getElementById('smtpToAl1').value.trim(),
+    smtpToAl2: document.getElementById('smtpToAl2').value.trim(),
+    smtpToAl3: document.getElementById('smtpToAl3').value.trim(),
+    smtpToBp1: document.getElementById('smtpToBp1').value.trim(),
+    smtpToBp2: document.getElementById('smtpToBp2').value.trim(),
+    smtpToBp3: document.getElementById('smtpToBp3').value.trim(),
+  };
+
+  try {
+    const res = await fetch('/api/notifications', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Error guardando configuración');
+    alert('Configuración de Notificaciones guardada correctamente');
+  } catch (e) {
+    alert('Error guardando configuración de Notificaciones: ' + e.message);
+  }
+}
+
+// Añadir listener al formulario Notificaciones
+document.getElementById('notificationsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  await saveNotificationsConfig();
+});
+  // >>>>>>>>>>> FIN FUNCIONES PARA TAB NOTIFICACIONES   
+
+
+// >>>>>>>>>>> FUNCIONES PARA PESTAÑA RED
+
+// 1. Cargar configuración de Red desde el backend
+async function loadNetworkConfig() {
+  try {
+    const res = await fetch('/api/networkConfig', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const cfg = await res.json();
+    document.getElementById('apn').value      = cfg.apn || '';
+    document.getElementById('wifiSsid').value = cfg.wifiSsid || '';
+    document.getElementById('wifiPass').value = cfg.wifiPass || '';
+  } catch (err) {
+    alert('Error cargando configuración de red: ' + err.message);
+  }
+}
+
+// 2. Validación de campos antes de enviar
+function validateNetworkConfig(data) {
+  if (!data.apn.trim()) {
+    throw new Error('El campo APN es obligatorio.');
+  }
+  if (!data.wifiSsid.trim()) {
+    throw new Error('El campo SSID es obligatorio.');
+  }
+  // wifiPass puede quedar vacío si se desea mantener la existente
+}
+
+// 3. Guardar configuración de Red
+async function saveNetworkConfig() {
+  const payload = {
+    apn:      document.getElementById('apn').value.trim(),
+    wifiSsid: document.getElementById('wifiSsid').value.trim(),
+    wifiPass: document.getElementById('wifiPass').value.trim()
+  };
+
+  try {
+    validateNetworkConfig(payload);
+    const res = await fetch('/api/networkConfig', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    alert('Configuración de red guardada correctamente.');
+  } catch (err) {
+    alert('Error guardando configuración de red: ' + err.message);
+  }
+}
+
+// 4. Listener para el formulario de Red
+document.getElementById('networkForm')
+  .addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await saveNetworkConfig();
+  });
+
+
+// >>>>>>>>>>> FUNCIONES PARA PESTAÑA EMAIL
+
+// 1. Cargar configuración de Email desde el backend
+async function loadEmailConfig() {
+  try {
+    const res = await fetch('/api/emailConfig', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const cfg = await res.json();
+    document.getElementById('smtpServer').value = cfg.smtpServer || '';
+    document.getElementById('smtpPort').value   = cfg.smtpPort != null ? cfg.smtpPort : '';
+    document.getElementById('smtpUser').value   = cfg.smtpUser || '';
+    document.getElementById('smtpPass').value   = cfg.smtpPass || '';
+    document.getElementById('smtpFrom').value   = cfg.smtpFrom || '';
+    document.getElementById('smtpUseTLS').checked = !!cfg.smtpUseTLS;
+  } catch (err) {
+    alert('Error cargando configuración de correo: ' + err.message);
+  }
+}
+
+// 2. Validar antes de guardar
+function validateEmailConfig(data) {
+  if (!data.smtpServer.trim()) {
+    throw new Error('El servidor SMTP es obligatorio.');
+  }
+  if (!data.smtpPort || isNaN(data.smtpPort) || data.smtpPort < 1 || data.smtpPort > 65535) {
+    throw new Error('El puerto SMTP debe ser un número entre 1 y 65535.');
+  }
+  if (!data.smtpFrom.trim()) {
+    throw new Error('El campo "Remitente" es obligatorio.');
+  }
+  // smtpUser/smtpPass pueden quedar vacíos si no se requiere auth
+}
+
+// 3. Guardar configuración de Email
+async function saveEmailConfig() {
+  const payload = {
+    smtpServer: document.getElementById('smtpServer').value.trim(),
+    smtpPort:   parseInt(document.getElementById('smtpPort').value, 10) || 0,
+    smtpUser:   document.getElementById('smtpUser').value.trim(),
+    smtpPass:   document.getElementById('smtpPass').value,
+    smtpFrom:   document.getElementById('smtpFrom').value.trim(),
+    smtpUseTLS: document.getElementById('smtpUseTLS').checked
+  };
+
+  try {
+    validateEmailConfig(payload);
+    const res = await fetch('/api/emailConfig', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    alert('Configuración de correo guardada correctamente.');
+  } catch (err) {
+    alert('Error guardando configuración de correo: ' + err.message);
+  }
+}
+
+// 4. Listener en el formulario Email
+document.getElementById('emailForm')
+  .addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await saveEmailConfig();
+  });
+
+
+
+// Nuevo handler para el botón "Probar Email"
+document.getElementById('testEmailBtn').addEventListener('click', async () => {
+  // 1. Recoge y guarda la configuración de email
+  const payload = {
+    smtpServer: document.getElementById('smtpServer').value.trim(),
+    smtpPort:   parseInt(document.getElementById('smtpPort').value, 10) || 0,
+    smtpUser:   document.getElementById('smtpUser').value.trim(),
+    smtpPass:   document.getElementById('smtpPass').value,
+    smtpFrom:   document.getElementById('smtpFrom').value.trim(),
+    smtpUseTLS: document.getElementById('smtpUseTLS').checked
+  };
+
+  // 2. Recoge el email de prueba
+  const testTo = document.getElementById('testEmailTo').value.trim();
+  if (!testTo) {
+    alert('Introduce un correo de destino para la prueba.');
+    return;
+  }
+
+  try {
+    // 3. Valida y guarda la config
+    validateEmailConfig(payload);
+    const resSave = await fetch('/api/emailConfig', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    if (!resSave.ok) throw new Error(`HTTP ${resSave.status}`);
+    // Si quieres notificar, pon aquí alert('Configuración guardada OK.');
+
+    // 4. Prepara datos de prueba
+    const params = new URLSearchParams();
+    params.append('to', testTo);
+
+    // 5. Lanza la prueba de email
+    const resTest = await fetch('/api/emailTest', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+
+    // Si el servidor responde 202, significa que el envío está en curso
+    if (resTest.status === 202) {
+      alert('El envío del correo de prueba se ha iniciado. Revisa tu correo en unos minutos.');
+    } else {
+      // Si responde otra cosa (por ejemplo, error de validación), intenta mostrar el mensaje del backend
+      let data = null;
+      try {
+        data = await resTest.json();
+      } catch (e) { /* ignora error si no hay JSON */ }
+
+      if (data && data.msg) {
+        alert('Error al enviar correo de prueba: ' + data.msg);
+      } else {
+        alert('Error desconocido al solicitar la prueba de email. Código HTTP: ' + resTest.status);
+      }
+    }
+
+  } catch (err) {
+    alert('Error en prueba de correo: ' + err.message);
+  }
+});
+
+
+
+
+
+    // >>>>>>>>>>> INICIO FUNCIONES WHITELIST
+ // Función para cargar la whitelist desde backend y mostrarla
+// Función para cargar la whitelist y mostrarla
+async function loadWhitelist() {
+  const tbody = document.querySelector("#whitelistTable tbody");
+  tbody.innerHTML = ""; // Limpiar tabla
+
+  try {
+    const res = await fetch("/api/whitelist", {
+      method: "GET",
+      credentials: "include"
+    });
+    if (!res.ok) throw new Error("Error al cargar whitelist");
+    const data = await res.json();
+
+    data.whitelist.forEach(entry => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${entry.id}</td>
+        <td>${entry.number}</td>
+        <td>${entry.isVip ? "Sí" : "No"}</td>
+        <td>
+          <button onclick="editFriend(${entry.id})">Editar</button>
+          <button onclick="deleteFriend(${entry.id})">Borrar</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    alert("Error cargando amigos: " + e.message);
+  }
+}
+
+// Añadir amigo (botón Añadir)
+document.getElementById("addFriendBtn").addEventListener("click", async () => {
+  const number = prompt("Introduce el número con + y código país:");
+  if (!number) return alert("Número vacío");
+
+  const isVip = confirm("¿Es VIP? (Aceptar = Sí, Cancelar = No)");
+
+  try {
+    const res = await fetch("/api/whitelist", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      credentials: "include",
+      body: JSON.stringify({
+        action: "add",
+        number,
+        isVip
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Error añadiendo amigo");
+    }
+    alert("Amigo añadido correctamente");
+    loadWhitelist();
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
+});
+
+// Editar amigo
+async function editFriend(id) {
+  const rows = document.querySelectorAll("#whitelistTable tbody tr");
+  let currentNumber = null;
+
+  for (const row of rows) {
+    const cellId = row.querySelector("td").textContent.trim();
+    if (parseInt(cellId) === id) {
+      currentNumber = row.querySelectorAll("td")[1].textContent.trim();
+      break;
+    }
+  }
+
+  if (currentNumber === null) {
+    alert("No se encontró el número para ese ID");
+    return;
+  }
+
+  const newNumber = prompt("Introduce el nuevo número con + y código país:", currentNumber);
+  if (!newNumber) {
+    alert("Número vacío");
+    return;
+  }
+
+  const newIsVip = confirm("¿Es VIP? (Aceptar = Sí, Cancelar = No)");
+
+  try {
+    const res = await fetch("/api/whitelist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "edit",
+        id,
+        number: newNumber,
+        isVip: newIsVip,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Error editando amigo");
+    }
+
+    alert("Amigo editado correctamente");
+    loadWhitelist();
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
+}
+
+// Borrar amigo
+async function deleteFriend(id) {
+  if (!confirm(`¿Seguro que quieres borrar el amigo con ID ${id}?`)) return;
+
+  try {
+    const res = await fetch("/api/whitelist", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      credentials: "include",
+      body: JSON.stringify({
+        action: "delete",
+        id
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Error borrando amigo");
+    }
+    alert("Amigo borrado correctamente");
+    loadWhitelist();
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
+}
+// >>>>>>>>>>> FIN FUNCIONES WHITELIST
+
+// >>>>>>>>>>> INICIO FUNCIONES PROGRAMACION HORARIA
+// Array global para guardar las entradas actuales de horario
+let scheduleData = [];
+let scheduleEnabled = false;      // estado del toggle
+document.getElementById('horarioStatus').classList.add('inactive');
+
+// ─── Función para actualizar el UI del toggle ────────────────────────────────
+function updateHorarioToggleUI() {
+  const statusEl = document.getElementById('horarioStatus');
+  const btn      = document.getElementById('toggleHorarioBtn');
+
+  if (scheduleEnabled) {
+    statusEl.textContent = 'Programación horaria activada';
+    btn.textContent      = 'Desactivar programación';
+    statusEl.classList.add('active');
+    statusEl.classList.remove('inactive');
+  } else {
+    statusEl.textContent = 'Programación horaria desactivada';
+    btn.textContent      = 'Activar programación';
+    statusEl.classList.add('inactive');
+    statusEl.classList.remove('active');
+  }
+}
+
+// Función para cargar scheduleData desde el backend
+async function loadScheduleTable() {
+  try {
+    const res = await fetch('/api/horario', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify({ action: 'get' })
+    });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+
+    scheduleData     = data.entries || [];
+    scheduleEnabled  = !!data.armDisarmHorario;
+    renderScheduleTable();      // tu función existente
+    updateHorarioToggleUI();    // actualiza texto y botón
+
+  } catch (e) {
+    alert('Error cargando programación horaria: ' + e.message);
+  }
+}
+
+// Función para renderizar la tabla en HTML a partir de scheduleData
+function renderScheduleTable() {
+  const tbody = document.querySelector('#scheduleTable tbody');
+  tbody.innerHTML = ''; // limpiar tabla
+
+  scheduleData.forEach((entry, index) => {
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+      <td>${entry.enabled ? 'Sí' : 'No'}</td>
+      <td>${String(entry.hourArm).padStart(2, '0')}:${String(entry.minuteArm).padStart(2, '0')}</td>
+      <td>${String(entry.hourDisarm).padStart(2, '0')}:${String(entry.minuteDisarm).padStart(2, '0')}</td>
+      <td>${renderDaysMask(entry.daysMask)}</td>
+      <td>
+        <button onclick="openEditForm(${index})">Editar</button>
+        <button onclick="deleteScheduleEntry(${index})">Borrar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Función auxiliar para mostrar días a partir del mask
+function renderDaysMask(mask) {
+  const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  let res = [];
+  for (let i = 0; i < 7; i++) {
+    if (mask & (1 << i)) res.push(days[i]);
+  }
+  return res.join(', ');
+}
+
+// Abre el formulario para añadir o editar
+function openEditForm(index) {
+  const form = document.getElementById('scheduleForm');
+  form.style.display = 'block';
+
+  if (index === null) {
+    // Agregar: campos vacíos
+    document.getElementById('scheduleId').value = '';
+    document.getElementById('enabled').checked = false;
+    document.getElementById('hourArm').value = '';
+    document.getElementById('minuteArm').value = '';
+    document.getElementById('hourDisarm').value = '';
+    document.getElementById('minuteDisarm').value = '';
+    document.querySelectorAll('.dayCheckbox').forEach(cb => cb.checked = false);
+  } else {
+    // Editar: cargar valores desde scheduleData[index]
+    const entry = scheduleData[index];
+    document.getElementById('scheduleId').value = index;
+    document.getElementById('enabled').checked = entry.enabled;
+    document.getElementById('hourArm').value = entry.hourArm;
+    document.getElementById('minuteArm').value = entry.minuteArm;
+    document.getElementById('hourDisarm').value = entry.hourDisarm;
+    document.getElementById('minuteDisarm').value = entry.minuteDisarm;
+
+    document.querySelectorAll('.dayCheckbox').forEach(cb => {
+      cb.checked = (entry.daysMask & parseInt(cb.value)) !== 0;
+    });
+  }
+}
+
+// Esconde el formulario
+function hideScheduleForm() {
+  const form = document.getElementById('scheduleForm');
+  form.style.display = 'none';
+}
+
+// Evento para botón Añadir Entrada
+document.getElementById('addScheduleBtn').addEventListener('click', () => {
+  openEditForm(null);
+});
+
+// Evento submit del formulario
+const scheduleForm = document.getElementById('scheduleForm');
+scheduleForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const dayCheckboxes = document.querySelectorAll('.dayCheckbox');
+  const anyDaySelected = Array.from(dayCheckboxes).some(cb => cb.checked);
+  if (!anyDaySelected) {
+    alert('Debes seleccionar al menos un día de la semana.');
+    return;
+  }
+
+  const id = document.getElementById('scheduleId').value;
+  const enabled = document.getElementById('enabled').checked;
+  const hourArm = parseInt(document.getElementById('hourArm').value, 10);
+  const minuteArm = parseInt(document.getElementById('minuteArm').value, 10);
+  const hourDisarm = parseInt(document.getElementById('hourDisarm').value, 10);
+  const minuteDisarm = parseInt(document.getElementById('minuteDisarm').value, 10);
+
+  let daysMask = 0;
+  document.querySelectorAll('.dayCheckbox').forEach(cb => {
+    if (cb.checked) daysMask |= parseInt(cb.value, 10);
+  });
+
+  const newEntry = { enabled, hourArm, minuteArm, hourDisarm, minuteDisarm, daysMask };
+
+  if (id === '') {
+    scheduleData.push(newEntry);
+  } else {
+    scheduleData[parseInt(id, 10)] = newEntry;
+  }
+
+  try {
+    const dataToSend = {
+      action: 'set',
+      count: scheduleData.length,
+      entries: scheduleData,
+      armDisarmHorario: scheduleEnabled    // ← añadimos aquí el flag
+    };
+
+    const res = await fetch('/api/horario', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify(dataToSend)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      alert('Error guardando: ' + (errorData.error || 'Error desconocido'));
+      return;
+    }
+
+    alert('Guardado correctamente');
+    hideScheduleForm();
+    renderScheduleTable();
+
+  } catch (error) {
+    alert('Error de conexión: ' + error.message);
+  }
+});
+
+
+// Evento para botón Cancelar en formulario
+document.getElementById('cancelScheduleBtn').addEventListener('click', e => {
+  e.preventDefault();
+  hideScheduleForm();
+});
+
+// ─── Listener para el botón de toggle ────────────────────────────────────────
+document.getElementById('toggleHorarioBtn')
+  .addEventListener('click', async () => {
+    const btn = document.getElementById('toggleHorarioBtn');
+    const newState = !scheduleEnabled;
+
+    btn.disabled = true;  // evita clicks múltiples
+    try {
+      const payload = {
+        action: 'set',
+        count: scheduleData.length,
+        entries: scheduleData,
+        armDisarmHorario: newState
+      };
+      const res = await fetch('/api/horario', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({error:res.status}));
+        throw new Error(err.error || res.status);
+      }
+      scheduleEnabled = newState;       // sólo actualizamos si todo va bien
+      updateHorarioToggleUI();
+      alert('Estado de programación guardado.');
+    } catch (err) {
+      alert('Error guardando estado: ' + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+// >>>>>>>>>>> FIN FUNCIONES PROGRAMACION HORARIA
+
+// >>>>>>>>>>> INIICIO FUNCIONES ACTIVIDAD
+async function loadUserLog() {
+  const res = await fetch('/api/userLog', { credentials: 'include' });
+  if (!res.ok) {
+    alert('Error cargando el log de actividad');
+    return;
+  }
+  const entries = await res.json();
+
+  //console.log("Data recibida:", entries);
+
+  const tbody = document.querySelector('#userLogTable tbody');
+  tbody.innerHTML = ""; // limpia la tabla
+
+  // Mapeo de nivel a color (puedes ajustar)
+  const levelColors = {
+    "Info":    "#222",      // Negro/gris oscuro
+    "Warning": "#f0ad4e",   // Naranja
+    "Error":   "#d9534f",   // Rojo
+    "Alarm":   "#b80000"    // Rojo oscuro potente
+  };
+
+  //console.log("Entradas a pintar:", entries.length);
+  entries.forEach(entry => {
+    const tr = document.createElement('tr');
+
+    // Fecha/Hora
+    const tdTime = document.createElement('td');
+    tdTime.textContent = entry.fecha || "";
+    tr.appendChild(tdTime);
+
+    // Tipo (con color)
+    const tdLevel = document.createElement('td');
+    // Nivel ahora es numérico
+    let levelStr = "";
+    switch (entry.nivel) {
+      case 1: levelStr = "Info"; break;
+      case 2: levelStr = "Warning"; break;
+      case 3: levelStr = "Error"; break;
+      case 4: levelStr = "Alarm"; break;
+      default: levelStr = "Info";
+    }
+    tdLevel.textContent = levelStr;
+    tdLevel.style.color = levelColors[levelStr] || "#222";
+    tdLevel.style.fontWeight = "bold";
+    tr.appendChild(tdLevel);
+
+    // Remitente
+    const tdSender = document.createElement('td');
+    tdSender.textContent = entry.numero || "";
+    tr.appendChild(tdSender);
+
+    // Mensaje
+    const tdMsg = document.createElement('td');
+    tdMsg.textContent = entry.msg;
+    tr.appendChild(tdMsg);
+
+    tbody.appendChild(tr);
+  });
+}
+
+
+// O bien, cuando abras la pestaña “Actividad”
+
+// >>>>>>>>>>> FIN FUNCIONES ACTIVIDAD
+
+
+/*
+console.log = function(msg) {
+  alert(msg);
+}*/
+
+</script>
+
+
+</body>
+</html>
