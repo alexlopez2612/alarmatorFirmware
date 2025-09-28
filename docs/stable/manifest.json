@@ -5,7 +5,7 @@
   "released_at": "2025-09-28T00:00:00Z",
 
   "firmware": {
-    "url": "https://github.com/alexlopez2612/alarmatorFirmware/releases/download/v1.0.42/alarmator-v1.0.44.bin",
+    "url": "https://alexlopez2612.github.io/alarmatorFirmware/stable/alarmator-v1.0.44.bin",
     "size": 1185264,
     "sha256": "40E0B97CA9A997C4BE2F25A057B98C20CEFD16F574AB21AFE039E5BDC78FC0A2"
   },
@@ -18,3 +18,4 @@
     }
   }
 }
+
