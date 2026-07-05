@@ -2,12 +2,12 @@
   "device": "Alarmator-ESP32-A7670",
   "channel": "stable",
   "version": "1.0.75",
-  "released_at": "2026-07-05T06:44:30Z",
+  "released_at": "2026-07-05T06:56:06Z",
 
   "firmware": {
     "url": "https://alexlopez2612.github.io/alarmatorFirmware/stable/1.0.75/firmware.bin",
-    "size": 1299472,
-    "sha256": "B5BBE03EBAD31B6739B1B1870EE05BEBF7C89E6DED88438065AF6B736292727E"
+    "size": 1299568,
+    "sha256": "400CC7B6104299D60171B25E5B8B67222F98C100FB447F35E723EEB5204A4F4F"
   },
 
   "web": {
