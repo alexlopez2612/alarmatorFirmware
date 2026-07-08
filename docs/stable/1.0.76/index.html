@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alarmator · LED Labs</title>
+<style>
+:root {
+  --bg:#070a0f;
+  --panel:#101722;
+  --panel2:#151f2e;
+  --text:#eaf2ff;
+  --muted:#8fa3bb;
+  --line:rgba(255,255,255,.10);
+  --ok:#35f2a3;
+  --warn:#ffd166;
+  --bad:#ff5c7a;
+  --blue:#61a8ff;
+  --shell-max:1180px;
+  --shell-pad:1rem;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+html,body { margin:0; min-height:100%; }
+body {
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top left, rgba(40,120,255,.16), transparent 32rem),
+    linear-gradient(180deg,#070a0f 0%,#0b1018 100%);
+  color:var(--text);
+  font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+}
+button,input,select,textarea { font:inherit; }
+button { cursor:pointer; }
+.hidden { display:none !important; }
+
+/* ───────── Cabecera ───────── */
+.topbar {
+  position:sticky;
+  top:0;
+  z-index:50;
+  border-bottom:1px solid var(--line);
+  background:rgba(7,10,15,.86);
+  backdrop-filter:blur(14px);
+}
+.topbar-inner {
+  width:min(var(--shell-max),calc(100% - 2rem));
+  margin:0 auto;
+  min-height:74px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:1rem;
+}
+.brand {
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  min-width:0;
+  justify-self:start;
+  width:100%;
+}
+.brand img {
+  display:block;
+  width:auto;
+  height:40px;
+  max-width:100%;
+  object-fit:contain;
+}
+.topbar-title {
+  display:grid;
+  gap:.1rem;
+  grid-column:2;
+  text-align:center;
+  min-width:0;
+}
+.topbar-title strong {
+  font-size:1.18rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.topbar-title span {
+  color:var(--muted);
+  font-size:.69rem;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+/* ───────── Shell ───────── */
+.shell {
+  width:min(var(--shell-max),calc(100% - 2rem));
+  margin:1.25rem auto 2.5rem;
+}
+.login-panel,
+.config-tabs-row,
+.config-card,
+.summary-card,
+.soft-card,
+.table-card {
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  box-shadow:0 24px 80px rgba(0,0,0,.24);
+}
+.login-panel {
+  width:min(100%,460px);
+  margin:4rem auto;
+  padding:1.35rem;
+}
+.login-logo {
+  display:block;
+  width:min(300px,100%);
+  height:auto;
+  margin:0 auto 1.4rem;
+}
+.login-panel h1 { margin:0 0 .4rem; font-size:1.8rem; }
+.login-panel p { color:var(--muted); margin:.25rem 0 1.2rem; }
+#loginError { display:none; color:var(--bad); font-weight:800; }
+#mainApp { display:none; }
+
+/* ───────── Tabs ───────── */
+.config-tabs-row {
+  display:flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.45rem;
+  margin-bottom:1rem;
+}
+.config-tabs {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.55rem;
+  flex:1 1 auto;
+  min-width:0;
+}
+.tab {
+  border:1px solid transparent;
+  border-radius:8px;
+  background:transparent;
+  color:var(--muted);
+  padding:.62rem .78rem;
+  font-size:.74rem;
+  font-weight:850;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  transition:.15s ease;
+}
+.tab:hover { color:var(--text); background:rgba(255,255,255,.055); }
+.tab.active {
+  color:var(--ok);
+  border-color:rgba(53,242,163,.32);
+  background:rgba(53,242,163,.08);
+}
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* ───────── Cards / headings ───────── */
+.config-card,.summary-card,.table-card { padding:1.2rem; }
+.config-card { display:grid; gap:1rem; }
+.config-card > h2,
+.summary-card > h2,
+.table-card > h2 {
+  margin:0;
+  padding-bottom:.75rem;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  color:var(--ok);
+  font-size:1rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.summary-card > h2.summary-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.75rem;
+  flex-wrap:wrap;
+}
+.home-system-alias {
+  color:var(--text);
+  font-size:.98rem;
+  font-weight:700;
+  letter-spacing:0;
+  text-align:right;
+  text-transform:none;
+  overflow-wrap:anywhere;
+}
+.home-device-meta {
+  display:grid;
+  gap:.2rem;
+  justify-items:end;
+  min-width:0;
+}
+.home-system-datetime {
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:600;
+  letter-spacing:0;
+  text-align:right;
+  text-transform:none;
+  overflow-wrap:anywhere;
+}
+.section-title {
+  color:var(--text);
+  font-size:.78rem;
+  font-weight:850;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-top:.2rem;
+}
+.section-help,.hint { color:var(--muted); font-size:.85rem; line-height:1.45; }
+.schedule-note {
+  margin:.65rem 0 .95rem;
+  padding:.72rem .85rem;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;
+  background:rgba(255,255,255,.04);
+  color:#c9d7e8;
+  font-size:.8rem;
+  line-height:1.5;
+}
+.soft-card {
+  padding:.9rem;
+  background:rgba(255,255,255,.025);
+  box-shadow:none;
+}
+.separator { border:0; border-top:1px solid var(--line); width:100%; margin:.25rem 0; }
+
+/* ───────── Formulario ───────── */
+.grid-2,.grid-3,.summary-grid {
+  display:grid;
+  gap:.95rem;
+}
+.grid-2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.grid-3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.summary-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.field { display:grid; gap:.4rem; }
+.field label,
+.check-field {
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:850;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.field-help {
+  margin:-.1rem 0 .45rem;
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:500;
+  letter-spacing:0;
+  text-transform:none;
+}
+.field input,
+.field select,
+.field textarea,
+input[type=text],input[type=password],input[type=number],input[type=email],select {
+  width:100%;
+  min-height:42px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:rgba(255,255,255,.055);
+  color:var(--text);
+  padding:.55rem .7rem;
+}
+input:focus,select:focus,textarea:focus {
+  outline:none;
+  border-color:rgba(53,242,163,.45);
+  box-shadow:0 0 0 3px rgba(53,242,163,.10);
+}
+input[readonly] {
+  opacity:.72;
+  cursor:not-allowed;
+}
+select option { background:#101722; color:var(--text); }
+.inline-checks {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.7rem 1.1rem;
+}
+.inline-checks label,
+.check-field {
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  color:var(--muted);
+  font-size:.9rem;
+  font-weight:600;
+  letter-spacing:0;
+  text-transform:none;
+}
+input[type=checkbox] {
+  width:18px;
+  height:18px;
+  accent-color:var(--ok);
+}
+.actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.6rem;
+  margin-top:.4rem;
+}
+.primary-btn,button {
+  min-height:40px;
+  border:1px solid rgba(143,163,187,.28);
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  padding:.58rem .85rem;
+  font-size:.78rem;
+  font-weight:850;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.primary-btn,
+button[type=submit],
+.save-all-button {
+  border-color:rgba(53,242,163,.55);
+  background:var(--ok);
+  color:#06100c;
+}
+button:hover { background:rgba(255,255,255,.09); }
+.primary-btn:hover,button[type=submit]:hover,.save-all-button:hover { filter:brightness(1.06); }
+button.secondary { background:rgba(255,255,255,.05); color:var(--text); }
+button.danger { color:var(--bad); border-color:rgba(255,92,122,.34); background:rgba(255,92,122,.075); }
+button:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ───────── Resumen ───────── */
+.summary-layout { display:grid; gap:1rem; }
+.lllink-placeholder {
+  min-height:76px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  background:rgba(255,255,255,.03);
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  padding:1rem;
+}
+.summary-tile {
+  min-height:118px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  background:rgba(255,255,255,.03);
+  padding:1rem;
+}
+.summary-tile span {
+  display:block;
+  color:var(--muted);
+  font-size:.7rem;
+  font-weight:850;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  margin-bottom:.55rem;
+}
+.summary-tile strong {
+  display:block;
+  font-size:1.5rem;
+  line-height:1.05;
+  letter-spacing:-.03em;
+}
+.summary-tile small { display:block; color:var(--muted); margin-top:.4rem; }
+.quick-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.65rem;
+}
+.quick-actions .arm { background:var(--ok); color:#06100c; border-color:rgba(53,242,163,.55); }
+.quick-actions .disarm { color:var(--warn); border-color:rgba(255,209,102,.38); background:rgba(255,209,102,.08); }
+
+/* ───────── Tablas / estados ───────── */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; margin-top:.8rem; }
+th {
+  color:var(--muted);
+  font-size:.68rem;
+  font-weight:850;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  border-bottom:1px solid var(--line);
+  padding:.75rem .7rem;
+  white-space:nowrap;
+}
+td {
+  border-bottom:1px solid rgba(255,255,255,.06);
+  padding:.8rem .7rem;
+  white-space:nowrap;
+}
+tbody tr:hover { background:rgba(255,255,255,.035); }
+.table-actions { display:flex; flex-wrap:wrap; gap:.45rem; }
+#whitelist table th,
+#whitelist table td { text-align:center; }
+#whitelist .table-actions { justify-content:center; }
+#schedule table th:nth-child(1),
+#schedule table th:nth-child(2),
+#schedule table th:nth-child(3),
+#schedule table th:nth-child(5),
+#schedule table td:nth-child(1),
+#schedule table td:nth-child(2),
+#schedule table td:nth-child(3),
+#schedule table td:nth-child(5) { text-align:center; }
+#schedule .table-actions { justify-content:center; }
+.status { min-height:22px; margin-top:.8rem; font-weight:800; white-space:pre-wrap; }
+.status.ok { color:var(--ok); }
+.status.error { color:var(--bad); }
+.toast {
+  position:fixed;
+  top:1rem;
+  right:1rem;
+  z-index:100;
+  display:none;
+  max-width:min(360px,calc(100% - 2rem));
+  padding:.85rem 1rem;
+  border:1px solid rgba(53,242,163,.55);
+  border-radius:8px;
+  background:#071018;
+  color:var(--ok);
+  font-weight:850;
+  box-shadow:0 16px 48px rgba(0,0,0,.35);
+}
+.toast.visible { display:block; }
+.placeholder {
+  min-height:220px;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  border:1px dashed rgba(255,255,255,.14);
+  border-radius:8px;
+  background:rgba(255,255,255,.02);
+  color:var(--muted);
+  padding:2rem;
+}
+.placeholder strong { display:block; color:var(--text); font-size:1.2rem; margin-bottom:.4rem; }
+#scheduleEditor { display:none; }
+
+footer {
+  width:min(var(--shell-max),calc(100% - 2rem));
+  margin:0 auto 1.2rem;
+  color:var(--muted);
+  text-align:center;
+  font-size:.8rem;
+}
+
+@media (max-width:900px) {
+  .summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:720px) {
+  .topbar-inner { width:min(100% - 1rem,var(--shell-max)); min-height:66px; }
+  .brand img { height:32px; max-width:100%; }
+  .topbar-title strong { font-size:.95rem; }
+  .topbar-title span { font-size:.6rem; }
+  .shell { width:min(100% - 1rem,var(--shell-max)); margin:.75rem auto 1.5rem; }
+  .grid-2,.grid-3,.summary-grid { grid-template-columns:1fr; }
+  .config-tabs-row { flex-wrap:wrap; align-items:stretch; }
+  .config-tabs { overflow-x:auto; flex-wrap:nowrap; }
+  .tab { flex:0 0 auto; }
+  .config-card,.summary-card,.table-card { padding:1rem; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img src="/ledlabs.png" alt="LED Labs">
+    </div>
+    <div class="topbar-title">
+      <strong>ALARMATOR</strong>
+      <span>Security System</span>
+    </div>
+  </div>
+</header>
+
+<main class="shell">
+  <section id="loginScreen" class="login-panel">
+    <img class="login-logo" src="/ledlabs.png" alt="LED Labs">
+    <h1>Acceso a Alarmator</h1>
+    <p>Introduce la clave local del dispositivo.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="pinInput">Clave</label>
+        <input type="password" id="pinInput" maxlength="4" inputmode="numeric" required autofocus>
+      </div>
+      <div class="actions"><button type="submit">Entrar</button></div>
+      <p id="loginError">Clave incorrecta.</p>
+    </form>
+  </section>
+
+  <section id="mainApp">
+    <div class="config-tabs-row">
+      <nav class="config-tabs" aria-label="Configuración">
+        <button class="tab active" data-tab="home" type="button">Inicio</button>
+        <button class="tab" data-tab="general" type="button">GENERAL</button>
+        <button class="tab" data-tab="energy" type="button">Energía</button>
+        <button class="tab" data-tab="notifications" type="button">Notificaciones</button>
+        <button class="tab" data-tab="communications" type="button">Sistema</button>
+        <button class="tab" data-tab="whitelist" type="button">Amigos</button>
+        <button class="tab" data-tab="schedule" type="button">Horarios</button>
+        <button class="tab" data-tab="activity" type="button">Actividad</button>
+        <button class="tab" data-tab="lllink" type="button">LL Link</button>
+        <button class="tab" data-tab="llscada" type="button">LL SCADA</button>
+      </nav>
+    </div>
+
+    <section id="home" class="tab-content active">
+      <div class="summary-layout">
+        <section class="summary-card">
+          <h2 class="summary-heading"><span>Resumen del dispositivo</span><div class="home-device-meta"><span id="homeSystemAlias" class="home-system-alias">Sin alias</span><small id="homeSystemDateTime" class="home-system-datetime">Sin hora</small></div></h2>
+          <div class="summary-grid">
+            <div class="summary-tile"><span>Alarma</span><strong id="homeAlarmValue">Sin datos</strong></div>
+            <div class="summary-tile"><span>Batería</span><strong id="homeBatteryValue">—</strong><small id="homeBatteryDetail">—</small></div>
+            <div class="summary-tile"><span>Señal móvil</span><strong id="homeMobileSignalValue">—</strong><small id="homeMobileSignalDetail">Sin medición</small></div>
+            <div class="summary-tile"><span>Alimentación</span><strong id="homePowerValue">—</strong><small>USB o batería</small></div>
+            <div class="summary-tile"><span>Wi‑Fi</span><strong id="homeWifiValue">—</strong><small>Estado de red local</small></div>
+            <div class="summary-tile"><span>LL SCADA</span><strong id="homeLlScadaValue">—</strong><small>Comunicación remota</small></div>
+          </div>
+        </section>
+        <section class="summary-card">
+          <h2>LL Link</h2>
+          <div class="lllink-placeholder">Sin dispositivos vinculados</div>
+        </section>
+        <section class="summary-card">
+          <h2>Acciones rápidas</h2>
+          <p class="section-help">Acciones preparadas para su conexión con el estado real del dispositivo.</p>
+          <div class="quick-actions">
+            <button type="button" class="arm" id="armAlarmBtn">Activar</button>
+            <button type="button" class="disarm" id="disarmAlarmBtn">Desactivar</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="general" class="tab-content">
+      <form class="config-save-form config-card" data-section="general">
+        <h2>General</h2>
+        <div class="section-title">Sensores y botón de pánico</div>
+        <div class="inline-checks">
+          <label><input type="checkbox" id="mov"> Movimiento</label>
+          <label><input type="checkbox" id="vibra"> Vibración</label>
+          <label><input type="checkbox" id="bp"> Botón de pánico</label>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Funcionamiento</div>
+        <div class="inline-checks">
+          <label><input type="checkbox" id="autoArm"> Autoarmado al arrancar</label>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Mensajes de estado</div>
+        <div class="soft-card">
+          <label class="check-field"><input type="checkbox" id="actMsgEstado"> Activar mensajes de estado</label>
+          <div id="statusMessageFields" class="grid-2" style="margin-top:.8rem">
+            <div class="field"><label for="statusSmsHour1">Hora de estado 1</label><div class="field-help">Valor permitido: de 0 a 23</div><input type="number" id="statusSmsHour1" min="0" max="23"></div>
+            <div class="field"><label for="statusSmsHour2">Hora de estado 2</label><div class="field-help">Valor permitido: de 0 a 23</div><input type="number" id="statusSmsHour2" min="0" max="23"></div>
+          </div>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Acceso web</div>
+        <div class="grid-2">
+          <div class="field"><label for="currentPassword">Clave actual</label><input type="password" id="currentPassword" maxlength="4" inputmode="numeric"></div>
+          <div></div>
+          <div class="field"><label for="newPassword">Nueva clave</label><input type="password" id="newPassword" maxlength="4" inputmode="numeric"></div>
+          <div class="field"><label for="confirmPassword">Confirmar nueva clave</label><input type="password" id="confirmPassword" maxlength="4" inputmode="numeric"></div>
+        </div>
+        <div class="actions"><button type="submit">Guardar configuración</button></div>
+      </form>
+    </section>
+
+    <section id="energy" class="tab-content">
+      <form class="config-save-form config-card" data-section="energy">
+        <h2>Energía</h2>
+
+        <div class="soft-card">
+          <div class="section-title">Ahorro de energía con Alarmator activado</div>
+          <p class="section-help">Alarmator se despierta periódicamente para comprobar mensajes y realizar sus tareas.</p>
+          <label class="check-field"><input type="checkbox" id="modoSleep"> Activar ahorro de energía</label>
+          <div id="sleepIntervalRow" class="field" style="margin-top:.8rem">
+            <label for="smsCheckInterval">Intervalo de despertar (minutos)</label>
+            <input type="number" id="smsCheckInterval" min="1" max="120" step="1">
+          </div>
+        </div>
+
+        <div class="soft-card">
+          <div class="section-title">Protección ante pérdida de alimentación</div>
+          <p class="section-help">Si Alarmator está desactivado y pierde la alimentación externa, podrá entrar en bajo consumo para conservar la batería hasta que vuelva la corriente.</p>
+          <label class="check-field"><input type="checkbox" id="powerLossProtectionEn"> Activar protección ante pérdida de alimentación</label>
+          <div id="powerLossWakeIntervalRow" class="field" style="margin-top:.8rem">
+            <label for="powerLossWakeInterval">Intervalo de comprobación durante el corte (minutos)</label>
+            <input type="number" id="powerLossWakeInterval" min="1" step="1">
+          </div>
+        </div>
+
+        <div class="actions"><button type="submit">Guardar configuración</button></div>
+      </form>
+    </section>
+
+    <section id="notifications" class="tab-content">
+      <form class="config-save-form config-card" data-section="notifications">
+        <h2>Notificaciones</h2>
+        <div class="section-title">Alarma</div>
+        <div class="inline-checks">
+          <label><input type="checkbox" id="alarmWrittenAlerts"> Avisos escritos</label>
+          <label><input type="checkbox" id="alarmCallAlerts"> Llamadas</label>
+        </div>
+        <div class="field"><label for="alarmCallDisarmWindowMs">Ventana para desactivar la alarma (segundos)</label><div class="field-help">Valor permitido: de 1 a 60</div><input type="number" id="alarmCallDisarmWindowMs" min="1" max="60" data-scale="1000"></div>
+        <div class="section-help">Se aplica antes de la primera llamada y entre llamadas.</div>
+        <div class="grid-2">
+          <div class="field"><label for="numSmsAlarma1">Número 1</label><input type="text" id="numSmsAlarma1" maxlength="20"></div>
+          <div class="field"><label for="smtpToAl1">Email 1</label><input type="email" id="smtpToAl1" maxlength="63"></div>
+          <div class="field"><label for="numSmsAlarma2">Número 2</label><input type="text" id="numSmsAlarma2" maxlength="20"></div>
+          <div class="field"><label for="smtpToAl2">Email 2</label><input type="email" id="smtpToAl2" maxlength="63"></div>
+          <div class="field"><label for="numSmsAlarma3">Número 3</label><input type="text" id="numSmsAlarma3" maxlength="20"></div>
+          <div class="field"><label for="smtpToAl3">Email 3</label><input type="email" id="smtpToAl3" maxlength="63"></div>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Botón de pánico</div>
+        <div class="inline-checks">
+          <label><input type="checkbox" id="panicWrittenAlerts"> Avisos escritos</label>
+          <label><input type="checkbox" id="panicCallAlerts"> Llamadas</label>
+        </div>
+        <div class="field"><label for="panicCallWindowMs">Pausa entre llamadas (segundos)</label><div class="field-help">Valor permitido: de 1 a 60</div><input type="number" id="panicCallWindowMs" min="1" max="60" data-scale="1000"></div>
+        <div class="grid-2">
+          <div class="field"><label for="numSmsBp1">Número 1</label><input type="text" id="numSmsBp1" maxlength="20"></div>
+          <div class="field"><label for="smtpToBp1">Email 1</label><input type="email" id="smtpToBp1" maxlength="63"></div>
+          <div class="field"><label for="numSmsBp2">Número 2</label><input type="text" id="numSmsBp2" maxlength="20"></div>
+          <div class="field"><label for="smtpToBp2">Email 2</label><input type="email" id="smtpToBp2" maxlength="63"></div>
+          <div class="field"><label for="numSmsBp3">Número 3</label><input type="text" id="numSmsBp3" maxlength="20"></div>
+          <div class="field"><label for="smtpToBp3">Email 3</label><input type="email" id="smtpToBp3" maxlength="63"></div>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Canales escritos</div>
+        <div class="inline-checks">
+          <label><input type="checkbox" id="actSmsAlerts"> SMS</label>
+          <label><input type="checkbox" id="actEmailAlerts"> E‑mail</label>
+        </div>
+        <div class="soft-card">
+          <strong>Integraciones futuras</strong>
+          <div class="section-help">Telegram e IFTTT se integrarán aquí cuando se defina su comportamiento final.</div>
+        </div>
+        <div class="actions"><button type="submit">Guardar configuración</button></div>
+      </form>
+    </section>
+
+    <section id="communications" class="tab-content">
+      <form class="config-save-form config-card" data-section="communications">
+        <h2>Sistema</h2>
+        <div class="section-title">Identidad del dispositivo</div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="llscada_deviceId">Device ID</label>
+            <input type="text" id="llscada_deviceId" maxlength="31" readonly>
+            <div class="section-help">Identificador único asignado al dispositivo.</div>
+          </div>
+          <div></div>
+          <div class="field">
+            <label for="systemAlias">Alias del sistema</label>
+            <input type="text" id="systemAlias" maxlength="39">
+            <div class="section-help">Nombre utilizado para identificar este Alarmator en correos y en LL SCADA.</div>
+          </div>
+          <div class="field">
+            <label for="systemNumber">Número móvil</label>
+            <input type="text" id="systemNumber" maxlength="23">
+            <div class="section-help">Número asociado a la tarjeta SIM instalada en el dispositivo.</div>
+          </div>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Red y comunicaciones</div>
+        <div class="grid-2">
+          <div class="field"><label for="apn">APN</label><input type="text" id="apn" maxlength="50"></div>
+          <div></div>
+          <div class="field"><label for="wifiSsid">Wi‑Fi SSID</label><input type="text" id="wifiSsid" maxlength="50"></div>
+          <div class="field"><label for="wifiPass">Wi‑Fi Password</label><input type="password" id="wifiPass" maxlength="50"></div>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Correo electrónico</div>
+        <div class="grid-2">
+          <div class="field"><label for="smtpServer">Servidor SMTP</label><input type="text" id="smtpServer" maxlength="63"></div>
+          <div class="field"><label for="smtpPort">Puerto SMTP</label><div class="field-help">Valor permitido: de 1 a 65535</div><input type="number" id="smtpPort" min="1" max="65535"></div>
+          <div class="field"><label for="smtpUser">Usuario SMTP</label><input type="text" id="smtpUser" maxlength="63"></div>
+          <div class="field"><label for="smtpPass">Contraseña SMTP</label><input type="password" id="smtpPass" maxlength="63"></div>
+          <div class="field"><label for="smtpFrom">Remitente</label><input type="email" id="smtpFrom" maxlength="63"></div>
+          <div class="field"><label class="check-field"><input type="checkbox" id="smtpUseTLS"> Usar TLS</label></div>
+        </div>
+
+        <div class="soft-card">
+          <div class="field"><label for="emailRoutePolicy">Política de ruta</label>
+            <select id="emailRoutePolicy">
+              <option value="0">Módem</option>
+              <option value="1">Wi‑Fi</option>
+              <option value="2">Automática / redundante</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="soft-card">
+          <div class="section-title">Probar correo</div>
+          <div class="field"><label for="testEmailTo">Destino de la prueba</label><input type="email" id="testEmailTo" maxlength="63" placeholder="correo@ejemplo.com"></div>
+          <div class="actions"><button type="button" id="testEmailBtn">Guardar y probar</button></div>
+          <div id="testEmailStatus" class="status"></div>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Actualización de firmware</div>
+        <p class="section-help">Direcciones utilizadas para localizar las actualizaciones de firmware. El segundo servidor actúa como alternativa.</p>
+        <div class="grid-2">
+          <div class="field"><label for="fota_manifest1">Manifest FOTA 1</label><input type="text" id="fota_manifest1" maxlength="99"></div>
+          <div class="field"><label for="fota_manifest2">Manifest FOTA 2</label><input type="text" id="fota_manifest2" maxlength="99"></div>
+        </div>
+        <div class="actions"><button type="submit">Guardar configuración</button></div>
+      </form>
+    </section>
+
+    <section id="whitelist" class="tab-content">
+      <div class="table-card">
+        <h2>Amigos</h2>
+        <p class="section-help">Los cambios se guardan junto con toda la configuración.</p>
+        <div class="actions"><button type="button" id="addFriendBtn">Añadir amigo</button></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Número</th><th>VIP</th><th>Acciones</th></tr></thead>
+            <tbody id="whitelistBody"></tbody>
+          </table>
+        </div>
+        <div class="actions"><button type="button" class="save-all-button">Guardar configuración</button></div>
+      </div>
+    </section>
+
+    <section id="schedule" class="tab-content">
+      <div class="table-card">
+        <h2>Programación horaria</h2>
+        <p class="section-help">Define a qué hora se desactiva Alarmator y a qué hora vuelve a activarse.</p>
+        <div class="schedule-note">Cómo funciona: Alarmator solo actúa durante el minuto programado. Si ya está en el estado indicado, no hace nada. Las acciones manuales siempre tienen prioridad. Si Alarmator está apagado en ese momento, la acción no se ejecutará más tarde.</div>
+        <div class="soft-card"><label class="check-field"><input type="checkbox" id="armDisarmHorario"> Activar programación horaria</label></div>
+        <div class="actions"><button type="button" id="addScheduleBtn">Añadir franja</button><span id="scheduleLimitNotice" class="section-help hidden">Máximo de 3 franjas alcanzado.</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Activo</th><th>Desactivado</th><th>Activado</th><th>Días</th><th>Acciones</th></tr></thead>
+            <tbody id="scheduleBody"></tbody>
+          </table>
+        </div>
+
+        <form id="scheduleEditor" class="soft-card" style="margin-top:1rem">
+          <input type="hidden" id="scheduleIndex">
+          <label class="check-field"><input type="checkbox" id="scheduleEnabled"> Franja habilitada</label>
+          <div class="grid-2" style="margin-top:.8rem">
+            <div class="field"><label for="scheduleHourDisarm">Hora de desactivación</label><div class="field-help">Valor permitido: de 0 a 23</div><input type="number" id="scheduleHourDisarm" min="0" max="23"></div>
+            <div class="field"><label for="scheduleMinuteDisarm">Minuto de desactivación</label><div class="field-help">Valor permitido: de 0 a 59</div><input type="number" id="scheduleMinuteDisarm" min="0" max="59"></div>
+            <div class="field"><label for="scheduleHourArm">Hora de activación</label><div class="field-help">Valor permitido: de 0 a 23</div><input type="number" id="scheduleHourArm" min="0" max="23"></div>
+            <div class="field"><label for="scheduleMinuteArm">Minuto de activación</label><div class="field-help">Valor permitido: de 0 a 59</div><input type="number" id="scheduleMinuteArm" min="0" max="59"></div>
+          </div>
+          <div id="dayChecks" class="inline-checks" style="margin-top:.8rem">
+            <label><input type="checkbox" value="1"> Lun</label><label><input type="checkbox" value="2"> Mar</label>
+            <label><input type="checkbox" value="4"> Mié</label><label><input type="checkbox" value="8"> Jue</label>
+            <label><input type="checkbox" value="16"> Vie</label><label><input type="checkbox" value="32"> Sáb</label>
+            <label><input type="checkbox" value="64"> Dom</label>
+          </div>
+          <div class="actions">
+            <button type="submit">Aplicar a la lista</button>
+            <button type="button" class="secondary" id="cancelScheduleBtn">Cancelar</button>
+          </div>
+        </form>
+        <div class="actions"><button type="button" class="save-all-button">Guardar configuración</button></div>
+      </div>
+    </section>
+
+    <section id="activity" class="tab-content">
+      <div class="table-card">
+        <h2>Actividad reciente</h2>
+        <div class="actions"><button type="button" id="refreshLogBtn">Actualizar</button></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha/Hora</th><th>Tipo</th><th>Remitente</th><th>Mensaje</th></tr></thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="lllink" class="tab-content">
+      <div class="config-card">
+        <h2>LED Labs Link</h2>
+        <div class="placeholder">
+          <div><strong>LL Link preparado</strong><span>Este espacio alojará la red privada de satélites LED Labs cuando se implemente su configuración.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="llscada" class="tab-content">
+      <form class="config-save-form config-card" data-section="llscada">
+        <h2>Configuración LED Labs SCADA</h2>
+        <div class="section-title">Estado</div>
+        <label class="check-field"><input type="checkbox" id="llscada_enabled"> Habilitar LL SCADA</label>
+
+        <hr class="separator">
+        <div class="section-title">Servidores</div>
+        <div class="grid-2">
+          <div class="field"><label for="llscada_server1">Server 1</label><input type="text" id="llscada_server1" maxlength="127"></div>
+          <div class="field"><label for="llscada_server2">Server 2</label><input type="text" id="llscada_server2" maxlength="127"></div>
+        </div>
+
+        <hr class="separator">
+        <div class="section-title">Intervalos</div>
+        <div class="grid-2">
+          <div class="field"><label for="llscada_heartbeatIntervalSec">Intervalo heartbeat (s)</label><div class="field-help">Valor permitido: de 10 a 3600</div><input type="number" id="llscada_heartbeatIntervalSec" min="10" max="3600"></div>
+          <div class="field"><label for="llscada_pollIntervalNormalSec">Intervalo request comandos (s)</label><div class="field-help">Valor permitido: de 5 a 3600</div><input type="number" id="llscada_pollIntervalNormalSec" min="5" max="3600"></div>
+        </div>
+        <div class="actions"><button type="submit">Guardar configuración</button></div>
+      </form>
+    </section>
+
+    <div id="globalStatus" class="status"></div>
+  </section>
+</main>
+
+<footer>&copy; López Electronics Designs Labs · 2026</footer>
+
+<div id="saveToast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+let configSnapshot = null;
+let saveInProgress = false;
+let toastTimer = null;
+let statusRefreshTimer = null;
+
+const byId = id => document.getElementById(id);
+
+function showStatus(message, isError = false) {
+  const el = byId('globalStatus');
+  el.textContent = message || '';
+  el.className = `status ${isError ? 'error' : 'ok'}`;
+}
+
+function showToast(message) {
+  const el = byId('saveToast');
+  el.textContent = message || '';
+  el.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('visible'), 3000);
+}
+
+function updateHomeAlias() {
+  const alias = configSnapshot?.config?.systemAlias?.trim();
+  byId('homeSystemAlias').textContent = alias || 'Sin alias';
+}
+
+async function loadStatus() {
+  try {
+    const status = await apiJson('/api/status');
+    byId('homeAlarmValue').textContent = status.alarm?.text ?? 'Sin datos';
+    byId('homeBatteryValue').textContent = status.battery?.percentText ?? '—';
+    byId('homeBatteryDetail').textContent = status.battery?.voltageText ?? '—';
+    byId('homeMobileSignalValue').textContent = status.mobileSignal?.text ?? '—';
+    byId('homeMobileSignalDetail').textContent = status.mobileSignal?.dbm !== -1 && status.mobileSignal?.dbm !== undefined ? `${status.mobileSignal.dbm} dBm` : 'Sin medición';
+    byId('homePowerValue').textContent = status.power?.sourceText ?? '—';
+    byId('homeWifiValue').textContent = status.wifi?.text ?? '—';
+    byId('homeLlScadaValue').textContent = status.llscada?.text ?? '—';
+    byId('homeSystemDateTime').textContent = status.systemDateTime || 'Sin hora';
+  } catch (error) {
+    console.error('No se pudo actualizar el estado:', error);
+  }
+}
+
+function startStatusRefresh() {
+  if (statusRefreshTimer) return;
+  statusRefreshTimer = setInterval(loadStatus, 5000);
+}
+
+function openTab(tabId) {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.tab === tabId));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.toggle('active', content.id === tabId));
+  if (tabId === 'home') { loadStatus(); startStatusRefresh(); }
+  if (tabId === 'activity') loadUserLog();
+}
+
+document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => openTab(tab.dataset.tab)));
+
+async function apiJson(url, options = {}) {
+  const response = await fetch(url, { credentials:'include', ...options });
+  let body = null;
+  try { body = await response.json(); } catch (_) {}
+  if (!response.ok) throw new Error(body?.error || body?.message || `HTTP ${response.status}`);
+  return body;
+}
+
+byId('loginForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  byId('loginError').style.display = 'none';
+  try {
+    await apiJson('/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ pin:byId('pinInput').value.trim() })
+    });
+    await loadConfig();
+    byId('loginScreen').style.display = 'none';
+    byId('mainApp').style.display = 'block';
+    loadStatus();
+    startStatusRefresh();
+  } catch (error) {
+    byId('loginError').textContent = error.message;
+    byId('loginError').style.display = 'block';
+  }
+});
+
+async function loadConfig() {
+  configSnapshot = await apiJson('/api/config');
+  if (!configSnapshot?.config || !Array.isArray(configSnapshot.whitelist) || !configSnapshot?.schedule?.entries) {
+    throw new Error('La respuesta de configuración no tiene el contrato esperado');
+  }
+  updateHomeAlias();
+  fillSimpleConfigFields();
+  renderWhitelist();
+  renderSchedule();
+  updateConditionalUi();
+}
+
+function fillSimpleConfigFields() {
+  const cfg = configSnapshot.config;
+  Object.entries(cfg).forEach(([key, value]) => {
+    const control = byId(key);
+    if (!control) return;
+    if (control.type === 'checkbox') control.checked = Boolean(value);
+    else {
+      const scale = Number(control.dataset.scale || 1);
+      control.value = typeof value === 'number' ? value / scale : value ?? '';
+    }
+  });
+}
+
+function collectSimpleConfigFields() {
+  const cfg = configSnapshot.config;
+  Object.keys(cfg).forEach(key => {
+    const control = byId(key);
+    if (!control || control.disabled) return;
+    if (control.type === 'checkbox') cfg[key] = control.checked;
+    else if (control.type === 'number' || control.tagName === 'SELECT') {
+      const number = Number(control.value);
+      const scale = Number(control.dataset.scale || 1);
+      cfg[key] = Number.isFinite(number) ? Math.round(number * scale) : 0;
+    } else cfg[key] = control.value.trim();
+  });
+
+  applyPasswordChange();
+}
+
+function applyPasswordChange() {
+  const current = byId('currentPassword').value.trim();
+  const next = byId('newPassword').value.trim();
+  const confirm = byId('confirmPassword').value.trim();
+  if (!current && !next && !confirm) return;
+  if (current !== configSnapshot.config.password) throw new Error('La clave actual no es correcta.');
+  if (!/^\d{4}$/.test(next)) throw new Error('La nueva clave debe tener exactamente 4 dígitos.');
+  if (next !== confirm) throw new Error('La nueva clave y su confirmación no coinciden.');
+  configSnapshot.config.password = next;
+}
+
+function validateSnapshot() {
+  const c = configSnapshot.config;
+  const errors = [];
+  if (!c.mov && !c.vibra) errors.push('Activa Movimiento o Vibración.');
+  if (!c.alarmWrittenAlerts && !c.alarmCallAlerts) errors.push('Alarma: activa avisos escritos o llamadas.');
+  if (!c.panicWrittenAlerts && !c.panicCallAlerts) errors.push('Pánico: activa avisos escritos o llamadas.');
+  if (!c.actSmsAlerts && !c.actEmailAlerts) errors.push('Activa SMS o E-mail como canal escrito.');
+  if (c.alarmCallAlerts && ![c.numSmsAlarma1,c.numSmsAlarma2,c.numSmsAlarma3].some(Boolean)) errors.push('Falta un teléfono de alarma para las llamadas.');
+  if (c.panicCallAlerts && ![c.numSmsBp1,c.numSmsBp2,c.numSmsBp3].some(Boolean)) errors.push('Falta un teléfono de pánico para las llamadas.');
+  if (c.actEmailAlerts && (!c.smtpServer || !c.smtpFrom || c.smtpPort < 1)) errors.push('La configuración SMTP está incompleta.');
+  if (c.modoSleep && (!Number.isInteger(c.smsCheckInterval) || c.smsCheckInterval < 1)) errors.push('Energía: el intervalo de despertar debe ser un entero mayor o igual que 1.');
+  if (c.powerLossProtectionEn && (!Number.isInteger(c.powerLossWakeInterval) || c.powerLossWakeInterval < 1)) errors.push('Energía: el intervalo de comprobación durante el corte debe ser un entero mayor o igual que 1.');
+  if (configSnapshot.whitelist.length > 0 && !configSnapshot.whitelist[0].isVip) errors.push('El primer amigo debe ser VIP.');
+  if (errors.length) throw new Error(errors.join('\n'));
+}
+
+async function saveAllConfig() {
+  if (saveInProgress || !configSnapshot) return;
+  saveInProgress = true;
+  document.querySelectorAll('button').forEach(button => button.disabled = true);
+  try {
+    collectSimpleConfigFields();
+    validateSnapshot();
+    await apiJson('/api/config', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(configSnapshot)
+    });
+    await loadConfig();
+    ['currentPassword','newPassword','confirmPassword'].forEach(id => byId(id).value = '');
+    showToast('Configuración guardada correctamente.');
+  } catch (error) {
+    showStatus(error.message, true);
+    alert(`No se pudo guardar:\n\n${error.message}`);
+  } finally {
+    document.querySelectorAll('button').forEach(button => button.disabled = false);
+    saveInProgress = false;
+  }
+}
+
+document.querySelectorAll('.config-save-form').forEach(form => form.addEventListener('submit', event => {
+  event.preventDefault();
+  saveAllConfig();
+}));
+document.querySelectorAll('.save-all-button').forEach(button => button.addEventListener('click', saveAllConfig));
+
+function updateConditionalUi() {
+  byId('sleepIntervalRow').classList.toggle('hidden', !byId('modoSleep').checked);
+  byId('powerLossWakeIntervalRow').classList.toggle('hidden', !byId('powerLossProtectionEn').checked);
+  byId('statusMessageFields').classList.toggle('hidden', !byId('actMsgEstado').checked);
+}
+byId('modoSleep').addEventListener('change', updateConditionalUi);
+byId('powerLossProtectionEn').addEventListener('change', updateConditionalUi);
+byId('actMsgEstado').addEventListener('change', updateConditionalUi);
+
+function normalizeWhitelistIds() {
+  configSnapshot.whitelist.forEach((entry,index) => entry.id = index + 1);
+}
+
+function renderWhitelist() {
+  normalizeWhitelistIds();
+  const body = byId('whitelistBody');
+  body.innerHTML = '';
+  configSnapshot.whitelist.forEach((entry,index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${index + 1}</td><td></td><td>${entry.isVip ? 'Sí' : 'No'}</td><td class="table-actions"></td>`;
+    row.children[1].textContent = entry.number;
+    const edit = document.createElement('button'); edit.type='button'; edit.textContent='Editar'; edit.addEventListener('click',()=>editFriend(index));
+    const remove = document.createElement('button'); remove.type='button'; remove.textContent='Borrar'; remove.className='danger'; remove.addEventListener('click',()=>deleteFriend(index));
+    row.children[3].append(edit,remove);
+    body.appendChild(row);
+  });
+}
+
+byId('addFriendBtn').addEventListener('click', () => {
+  const number = prompt('Número con prefijo internacional:');
+  if (!number?.trim()) return;
+  const isVip = configSnapshot.whitelist.length === 0 ? true : confirm('¿Es VIP?');
+  if (configSnapshot.whitelist.some(entry => entry.number === number.trim())) return alert('Ese número ya existe.');
+  configSnapshot.whitelist.push({ id:configSnapshot.whitelist.length + 1, number:number.trim(), isVip });
+  renderWhitelist();
+});
+
+function editFriend(index) {
+  const entry = configSnapshot.whitelist[index];
+  const number = prompt('Número:', entry.number);
+  if (!number?.trim()) return;
+  const isVip = index === 0 ? true : confirm('¿Es VIP?');
+  if (configSnapshot.whitelist.some((item,i) => i !== index && item.number === number.trim())) return alert('Ese número ya existe.');
+  entry.number = number.trim(); entry.isVip = isVip; renderWhitelist();
+}
+
+function deleteFriend(index) {
+  if (!confirm('¿Borrar este amigo?')) return;
+  const deletingVip = configSnapshot.whitelist[index]?.isVip;
+  const vipCount = configSnapshot.whitelist.filter(entry => entry.isVip).length;
+  if (deletingVip && vipCount <= 1 && configSnapshot.whitelist.length > 1) return alert('No puedes borrar el último VIP.');
+  configSnapshot.whitelist.splice(index,1);
+  if (configSnapshot.whitelist.length > 0) configSnapshot.whitelist[0].isVip = true;
+  renderWhitelist();
+}
+
+const dayNames = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+function daysText(mask) { return dayNames.filter((_,i)=> mask & (1 << i)).join(', '); }
+function timeText(hour,minute) { return `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`; }
+
+function updateScheduleLimitUi() {
+  const applyState = () => {
+    const limitReached = configSnapshot.schedule.entries.length >= 3;
+    byId('addScheduleBtn').disabled = limitReached;
+    byId('scheduleLimitNotice').classList.toggle('hidden', !limitReached);
+  };
+  applyState();
+  setTimeout(applyState, 0);
+}
+
+function renderSchedule() {
+  const body = byId('scheduleBody'); body.innerHTML='';
+  configSnapshot.schedule.entries.forEach((entry,index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${entry.enabled?'Sí':'No'}</td><td>${timeText(entry.hourDisarm,entry.minuteDisarm)}</td><td>${timeText(entry.hourArm,entry.minuteArm)}</td><td>${daysText(entry.daysMask)}</td><td class="table-actions"></td>`;
+    const edit=document.createElement('button'); edit.type='button'; edit.textContent='Editar'; edit.addEventListener('click',()=>openScheduleEditor(index));
+    const remove=document.createElement('button'); remove.type='button'; remove.textContent='Borrar'; remove.className='danger'; remove.addEventListener('click',()=>deleteSchedule(index));
+    row.children[4].append(edit,remove); body.appendChild(row);
+  });
+  updateScheduleLimitUi();
+}
+
+byId('addScheduleBtn').addEventListener('click',()=>openScheduleEditor(null));
+byId('cancelScheduleBtn').addEventListener('click',()=>byId('scheduleEditor').style.display='none');
+
+function openScheduleEditor(index) {
+  const entry = index === null ? {enabled:true,hourArm:22,minuteArm:0,hourDisarm:8,minuteDisarm:0,daysMask:31} : configSnapshot.schedule.entries[index];
+  byId('scheduleIndex').value = index === null ? '' : index;
+  byId('scheduleEnabled').checked = entry.enabled;
+  byId('scheduleHourArm').value = entry.hourArm;
+  byId('scheduleMinuteArm').value = entry.minuteArm;
+  byId('scheduleHourDisarm').value = entry.hourDisarm;
+  byId('scheduleMinuteDisarm').value = entry.minuteDisarm;
+  byId('dayChecks').querySelectorAll('input').forEach(cb => cb.checked = Boolean(entry.daysMask & Number(cb.value)));
+  byId('scheduleEditor').style.display='block';
+}
+
+byId('scheduleEditor').addEventListener('submit', event => {
+  event.preventDefault();
+  let daysMask=0; byId('dayChecks').querySelectorAll('input:checked').forEach(cb => daysMask |= Number(cb.value));
+  if (!daysMask) return alert('Selecciona al menos un día.');
+  const entry = {
+    enabled:byId('scheduleEnabled').checked,
+    hourArm:Number(byId('scheduleHourArm').value), minuteArm:Number(byId('scheduleMinuteArm').value),
+    hourDisarm:Number(byId('scheduleHourDisarm').value), minuteDisarm:Number(byId('scheduleMinuteDisarm').value), daysMask
+  };
+  const rawIndex=byId('scheduleIndex').value;
+  if (rawIndex === '') {
+    if (configSnapshot.schedule.entries.length >= 3) return alert('Alarmator admite un máximo de 3 franjas.');
+    configSnapshot.schedule.entries.push(entry);
+  } else configSnapshot.schedule.entries[Number(rawIndex)] = entry;
+  byId('scheduleEditor').style.display='none'; renderSchedule();
+});
+
+function deleteSchedule(index) {
+  if (!confirm('¿Borrar esta franja?')) return;
+  configSnapshot.schedule.entries.splice(index,1); renderSchedule();
+}
+
+byId('testEmailBtn').addEventListener('click', async () => {
+  const status=byId('testEmailStatus'); status.textContent='';
+  const to=byId('testEmailTo').value.trim();
+  if (!to) return alert('Introduce el email de destino.');
+  try {
+    collectSimpleConfigFields();
+    if (!configSnapshot.config.smtpServer || !configSnapshot.config.smtpFrom || configSnapshot.config.smtpPort < 1) throw new Error('Completa servidor, puerto y remitente SMTP.');
+    validateSnapshot();
+    await apiJson('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(configSnapshot)});
+    const params=new URLSearchParams({to});
+    await apiJson('/api/emailTest',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()});
+    status.textContent='Prueba iniciada. Revisa el correo en unos minutos.'; status.className='status ok';
+  } catch(error) {
+    status.textContent=error.message; status.className='status error';
+  }
+});
+
+byId('refreshLogBtn').addEventListener('click',loadUserLog);
+async function loadUserLog() {
+  const body=byId('logBody'); body.innerHTML='<tr><td colspan="4">Cargando...</td></tr>';
+  try {
+    const result=await apiJson('/api/userLog'); body.innerHTML='';
+    if (!Array.isArray(result)) {
+      if (result?.pending) {
+        body.innerHTML='<tr><td colspan="4">Actividad temporalmente no disponible.</td></tr>';
+        return;
+      }
+      throw new Error('Respuesta de actividad no válida');
+    }
+    const levels={1:'Info',2:'Warning',3:'Error',4:'Alarm'};
+    result.forEach(entry => {
+      const row=document.createElement('tr');
+      [entry.fecha||'',levels[entry.nivel]||'Info',entry.numero||'',entry.msg||''].forEach(text=>{const td=document.createElement('td');td.textContent=text;row.appendChild(td);});
+      body.appendChild(row);
+    });
+    if (!result.length) body.innerHTML='<tr><td colspan="4">Sin actividad registrada.</td></tr>';
+  } catch(error) { body.innerHTML=''; showStatus(error.message,true); }
+}
+
+// Acciones del resumen: preparadas, pero aún sin endpoint asociado.
+byId('armAlarmBtn').addEventListener('click', () => alert('Acción Activar pendiente de conectar.'));
+byId('disarmAlarmBtn').addEventListener('click', () => alert('Acción Desactivar pendiente de conectar.'));
+</script>
+</body>
+</html>
